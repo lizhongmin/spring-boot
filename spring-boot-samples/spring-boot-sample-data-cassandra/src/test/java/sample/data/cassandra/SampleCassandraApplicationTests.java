@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.TestExecutionListeners.MergeMode;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests for {@link SampleCassandraApplication}.
@@ -51,8 +51,7 @@ public class SampleCassandraApplicationTests {
 	@Test
 	public void testDefaultSettings() throws Exception {
 		String output = SampleCassandraApplicationTests.outputCapture.toString();
-		assertTrue("Wrong output: " + output,
-				output.contains("firstName='Alice', lastName='Smith'"));
+		assertThat(output).contains("firstName='Alice', lastName='Smith'");
 	}
 
 }

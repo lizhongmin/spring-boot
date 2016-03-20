@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,17 +36,19 @@ import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfigurati
 import org.springframework.boot.autoconfigure.jersey.JerseyAutoConfigurationCustomFilterContextPathTests.Application;
 import org.springframework.boot.autoconfigure.web.EmbeddedServletContainerAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.ServerPropertiesAutoConfiguration;
+import org.springframework.boot.context.web.LocalServerPort;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.TestRestTemplate;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.client.RestTemplate;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests for {@link JerseyAutoConfiguration} when using custom servlet paths.
@@ -54,13 +56,14 @@ import static org.junit.Assert.assertEquals;
  * @author Dave Syer
  */
 @RunWith(SpringJUnit4ClassRunner.class)
+@DirtiesContext
 @SpringApplicationConfiguration(Application.class)
 @IntegrationTest({ "server.port=0", "spring.jersey.type=filter",
 		"server.contextPath=/app" })
 @WebAppConfiguration
 public class JerseyAutoConfigurationCustomFilterContextPathTests {
 
-	@Value("${local.server.port}")
+	@LocalServerPort
 	private int port;
 
 	private RestTemplate restTemplate = new TestRestTemplate();
@@ -69,7 +72,7 @@ public class JerseyAutoConfigurationCustomFilterContextPathTests {
 	public void contextLoads() {
 		ResponseEntity<String> entity = this.restTemplate.getForEntity(
 				"http://localhost:" + this.port + "/app/rest/hello", String.class);
-		assertEquals(HttpStatus.OK, entity.getStatusCode());
+		assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.OK);
 	}
 
 	@MinimalWebConfiguration

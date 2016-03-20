@@ -438,6 +438,7 @@ in the '`Spring Boot features`' section, or the
 code.
 
 
+
 [[howto-user-a-random-unassigned-http-port]]
 === Use a random unassigned HTTP port
 To scan for a free port (using OS natives to prevent clashes) use `server.port=0`.
@@ -453,7 +454,7 @@ that and be sure that it has initialized is to add a `@Bean` of type
 out of the event when it is published.
 
 A useful practice for use with `@WebIntegrationTest` is to set `server.port=0`
-and then inject the actual ('`local`') port as a `@Value`. For example:
+and then inject the actual port. For example:
 
 [source,java,indent=0,subs="verbatim,quotes,attributes"]
 ----
@@ -465,7 +466,7 @@ and then inject the actual ('`local`') port as a `@Value`. For example:
 		@Autowired
 		EmbeddedWebApplicationContext server;
 
-		@Value("${local.server.port}")
+		@LocalServerPort
 		int port;
 
 		// ...
@@ -475,9 +476,10 @@ and then inject the actual ('`local`') port as a `@Value`. For example:
 
 [NOTE]
 ====
-Don't try to inject the port with `@Value` in a regular application. As we just saw, the
-value is only set once the container has initialized; contrary to a test, application code
-callbacks are processed early (i.e. before the value is actually available).
+`@LocalServerPort` is a meta-annotation for `@Value("${local.server.port}")`. Don't try
+to inject the port in a regular application. As we just saw, the value is only set once
+the container has initialized; contrary to a test, application code callbacks are
+processed early (i.e. before the value is actually available).
 ====
 
 
@@ -506,6 +508,8 @@ to use `application.properties` to configure HTTPS as the HTTP connector is the 
 the two to configure programmatically. See the
 {github-code}/spring-boot-samples/spring-boot-sample-tomcat-multi-connectors[`spring-boot-sample-tomcat-multi-connectors`]
 sample project for an example.
+
+
 
 [[howto-configure-accesslogs]]
 === Configure Access Logging
@@ -536,6 +540,7 @@ Access logging for undertow can be configured in a similar fashion
 
 Logs are stored in a `logs` directory relative to the working directory of the
 application. This can be customized via `server.undertow.accesslog.directory`.
+
 
 
 [[howto-use-behind-a-proxy-server]]
@@ -1342,12 +1347,11 @@ You also need to add `logging.file` to your `application.properties`:
 
 [[howto-configure-log4j-for-logging]]
 === Configure Log4j for logging
-Spring Boot also supports either http://logging.apache.org/log4j/1.2[Log4j] or
-http://logging.apache.org/log4j/2.x[Log4j 2] for logging configuration, but only if one
-of them is on the classpath. If you are using the starter poms for assembling
-dependencies that means you have to exclude Logback and then include your chosen version
-of Log4j instead. If you aren't using the starter poms then you need to provide
-`commons-logging` (at least) in addition to your chosen version of Log4j.
+Spring Boot supports http://logging.apache.org/log4j/2.x[Log4j 2] for logging
+configuration if it is on the classpath. If you are using the starter poms for
+assembling dependencies that means you have to exclude Logback and then include log4j 2
+instead. If you aren't using the starter poms then you need to provide `commons-logging`
+(at least) in addition to Log4j 2.
 
 The simplest path is probably through the starter poms, even though it requires some
 jiggling with excludes, .e.g. in Maven:
@@ -1370,17 +1374,14 @@ jiggling with excludes, .e.g. in Maven:
 	</dependency>
 	<dependency>
 		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-log4j</artifactId>
+		<artifactId>spring-boot-starter-log4j2</artifactId>
 	</dependency>
 ----
 
-To use Log4j 2, simply depend on `spring-boot-starter-log4j2` rather than
-`spring-boot-starter-log4j`.
-
-NOTE: The use of one of the Log4j starters gathers together the dependencies for
-common logging requirements (e.g. including having Tomcat use `java.util.logging` but
-configuring the output using Log4j or Log4j 2). See the Actuator Log4j or Log4j 2
-samples for more detail and to see it in action.
+NOTE: The use of the Log4j starters gathers together the dependencies for common logging
+requirements (e.g. including having Tomcat use `java.util.logging` but configuring the
+output using Log4j 2). See the Actuator Log4j 2 samples for more detail and to see it in
+action.
 
 
 
@@ -1440,6 +1441,21 @@ See _<<spring-boot-features.adoc#boot-features-configure-datasource>>_ in the
 '`Spring Boot features`' section and the
 {sc-spring-boot-autoconfigure}/jdbc/DataSourceAutoConfiguration.{sc-ext}[`DataSourceAutoConfiguration`]
 class for more details.
+
+[TIP]
+====
+You could also do that if you want to configure a JNDI data-source.
+
+[source,java,indent=0,subs="verbatim,quotes,attributes"]
+----
+	@Bean(destroyMethod="")
+	@ConfigurationProperties(prefix="datasource.mine")
+	public DataSource dataSource() throws Exception {
+		JndiDataSourceLookup dataSourceLookup = new JndiDataSourceLookup();
+		return dataSourceLookup.getDataSource("java:comp/env/jdbc/YourDS");
+	}
+----
+====
 
 
 
@@ -1703,7 +1719,7 @@ to start. The script locations can be changed by setting `spring.datasource.sche
 `spring.datasource.data`, and neither location will be processed if
 `spring.datasource.initialize=false`.
 
-To disable the fail-fast you can set `spring.datasource.continueOnError=true`. This can be
+To disable the fail-fast you can set `spring.datasource.continue-on-error=true`. This can be
 useful once an application has matured and been deployed a few times, since the scripts
 can act as '`poor man's migrations`' -- inserts that fail mean that the data is already
 there, so there would be no need to prevent the application from running, for instance.

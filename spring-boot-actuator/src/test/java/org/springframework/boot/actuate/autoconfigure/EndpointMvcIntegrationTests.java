@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.EndpointMvcIntegrationTests.Application;
 import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.actuate.endpoint.mvc.EndpointHandlerMapping;
@@ -48,6 +47,7 @@ import org.springframework.boot.autoconfigure.web.ErrorMvcAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
 import org.springframework.boot.autoconfigure.web.ServerPropertiesAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.WebMvcAutoConfiguration;
+import org.springframework.boot.context.web.LocalServerPort;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.TestRestTemplate;
@@ -64,8 +64,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Integration tests for MVC {@link Endpoint}s.
@@ -79,7 +78,7 @@ import static org.junit.Assert.assertTrue;
 @DirtiesContext
 public class EndpointMvcIntegrationTests {
 
-	@Value("${local.server.port}")
+	@LocalServerPort
 	private int port;
 
 	@Autowired
@@ -89,18 +88,16 @@ public class EndpointMvcIntegrationTests {
 	public void envEndpointHidden() throws InterruptedException {
 		String body = new TestRestTemplate().getForObject(
 				"http://localhost:" + this.port + "/env/user.dir", String.class);
-		assertNotNull(body);
-		assertTrue("Wrong body: \n" + body, body.contains("spring-boot-actuator"));
-		assertTrue(this.interceptor.invoked());
+		assertThat(body).isNotNull().contains("spring-boot-actuator");
+		assertThat(this.interceptor.invoked()).isTrue();
 	}
 
 	@Test
 	public void healthEndpointNotHidden() throws InterruptedException {
 		String body = new TestRestTemplate()
 				.getForObject("http://localhost:" + this.port + "/health", String.class);
-		assertNotNull(body);
-		assertTrue("Wrong body: \n" + body, body.contains("status"));
-		assertTrue(this.interceptor.invoked());
+		assertThat(body).isNotNull().contains("status");
+		assertThat(this.interceptor.invoked()).isTrue();
 	}
 
 	@Target(ElementType.TYPE)

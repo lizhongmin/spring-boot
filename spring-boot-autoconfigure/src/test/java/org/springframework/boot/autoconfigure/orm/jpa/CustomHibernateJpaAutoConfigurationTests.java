@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,9 +32,7 @@ import org.springframework.boot.test.EnvironmentTestUtils;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Configuration;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests for {@link HibernateJpaAutoConfiguration}.
@@ -68,7 +66,7 @@ public class CustomHibernateJpaAutoConfigurationTests {
 		String actual = bean.getHibernateProperties(dataSource)
 				.get("hibernate.hbm2ddl.auto");
 		// Default is generic and safe
-		assertThat(actual, nullValue());
+		assertThat(actual).isNull();
 	}
 
 	@Test
@@ -84,7 +82,7 @@ public class CustomHibernateJpaAutoConfigurationTests {
 		DataSource dataSource = this.context.getBean(DataSource.class);
 		String actual = bean.getHibernateProperties(dataSource)
 				.get("hibernate.hbm2ddl.auto");
-		assertThat(actual, equalTo("create-drop"));
+		assertThat(actual).isEqualTo("create-drop");
 	}
 
 	@Test
@@ -100,7 +98,7 @@ public class CustomHibernateJpaAutoConfigurationTests {
 		JpaProperties bean = this.context.getBean(JpaProperties.class);
 		DataSource dataSource = this.context.getBean(DataSource.class);
 		Map<String, String> hibernateProperties = bean.getHibernateProperties(dataSource);
-		assertThat(hibernateProperties.get("hibernate.ejb.naming_strategy"), nullValue());
+		assertThat(hibernateProperties.get("hibernate.ejb.naming_strategy")).isNull();
 	}
 
 	@Configuration

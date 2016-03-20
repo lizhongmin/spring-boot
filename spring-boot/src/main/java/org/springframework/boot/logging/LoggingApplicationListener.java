@@ -47,8 +47,10 @@ import org.springframework.util.StringUtils;
 
 /**
  * An {@link ApplicationListener} that configures the {@link LoggingSystem}. If the
- * environment contains a {@code logging.config} property a then that will be used to
- * initialize the logging system, otherwise a default configuration is used.
+ * environment contains a {@code logging.config} property it will be used to
+ * bootstrap the logging system, otherwise a default configuration is used. Regardless,
+ * logging levels will be customized if the environment contains {@code logging.level.*}
+ * entries.
  * <p>
  * By default, log output is only written to the console. If a log file is required the
  * {@code logging.path} and {@code logging.file} properties can be used.
@@ -282,13 +284,18 @@ public class LoggingApplicationListener implements GenericApplicationListener {
 
 	private void initializeEarlyLoggingLevel(ConfigurableEnvironment environment) {
 		if (this.parseArgs && this.springBootLogging == null) {
-			if (environment.containsProperty("debug")) {
+			if (isSet(environment, "debug")) {
 				this.springBootLogging = LogLevel.DEBUG;
 			}
-			if (environment.containsProperty("trace")) {
+			if (isSet(environment, "trace")) {
 				this.springBootLogging = LogLevel.TRACE;
 			}
 		}
+	}
+
+	private boolean isSet(ConfigurableEnvironment environment, String property) {
+		String value = environment.getProperty(property);
+		return !(value == null || value.equals("false"));
 	}
 
 	private void initializeSystem(ConfigurableEnvironment environment,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import org.apache.http.ssl.SSLContextBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.web.LocalServerPort;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.TestRestTemplate;
 import org.springframework.boot.test.WebIntegrationTest;
@@ -34,7 +34,7 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Basic integration tests for demo application.
@@ -47,7 +47,7 @@ import static org.junit.Assert.assertEquals;
 @DirtiesContext
 public class SampleJetty8SslApplicationTests {
 
-	@Value("${local.server.port}")
+	@LocalServerPort
 	private int port;
 
 	@Test
@@ -64,8 +64,8 @@ public class SampleJetty8SslApplicationTests {
 				.setHttpClient(httpClient);
 		ResponseEntity<String> entity = testRestTemplate
 				.getForEntity("https://localhost:" + this.port, String.class);
-		assertEquals(HttpStatus.OK, entity.getStatusCode());
-		assertEquals("Hello World", entity.getBody());
+		assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(entity.getBody()).isEqualTo("Hello World");
 	}
 
 }

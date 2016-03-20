@@ -56,9 +56,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests for configuring the path of an MVC endpoint.
@@ -119,7 +117,7 @@ public class MvcEndpointPathConfigurationTests {
 				"endpoints." + this.endpointName + ".enabled:true",
 				"logging.file:target/test.log");
 		this.context.refresh();
-		assertThat(getConfiguredPath(), is(equalTo("/custom/path")));
+		assertThat(getConfiguredPath()).isEqualTo("/custom/path");
 	}
 
 	private String getConfiguredPath() {

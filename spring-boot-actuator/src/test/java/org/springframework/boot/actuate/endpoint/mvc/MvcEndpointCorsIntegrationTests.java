@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -127,7 +127,7 @@ public class MvcEndpointCorsIntegrationTests {
 				"endpoints.cors.allowed-origins:foo.example.com");
 		createMockMvc()
 				.perform(options("/health").header(HttpHeaders.ORIGIN, "foo.example.com")
-						.header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "HEAD"))
+						.header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "PATCH"))
 				.andExpect(status().isForbidden());
 	}
 

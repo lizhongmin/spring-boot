@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,14 +28,13 @@ import org.springframework.boot.ansi.AnsiOutput;
 import org.springframework.boot.ansi.AnsiOutput.Enabled;
 import org.springframework.boot.ansi.AnsiOutputEnabledValue;
 import org.springframework.boot.context.config.AnsiOutputApplicationListener;
-import org.springframework.boot.test.EnvironmentTestUtils;
+import org.springframework.boot.testutil.EnvironmentTestUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.StandardEnvironment;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests for {@link AnsiOutputApplicationListener}.
@@ -67,7 +66,7 @@ public class AnsiOutputApplicationListenerTests {
 		props.put("spring.output.ansi.enabled", "ALWAYS");
 		application.setDefaultProperties(props);
 		this.context = application.run();
-		assertThat(AnsiOutputEnabledValue.get(), equalTo(Enabled.ALWAYS));
+		assertThat(AnsiOutputEnabledValue.get()).isEqualTo(Enabled.ALWAYS);
 	}
 
 	@Test
@@ -78,7 +77,7 @@ public class AnsiOutputApplicationListenerTests {
 		props.put("spring.output.ansi.enabled", "never");
 		application.setDefaultProperties(props);
 		this.context = application.run();
-		assertThat(AnsiOutputEnabledValue.get(), equalTo(Enabled.NEVER));
+		assertThat(AnsiOutputEnabledValue.get()).isEqualTo(Enabled.NEVER);
 	}
 
 	@Test
@@ -89,7 +88,7 @@ public class AnsiOutputApplicationListenerTests {
 		application.setWebEnvironment(false);
 		application.setEnvironment(environment);
 		this.context = application.run();
-		assertThat(AnsiOutputEnabledValue.get(), equalTo(Enabled.NEVER));
+		assertThat(AnsiOutputEnabledValue.get()).isEqualTo(Enabled.NEVER);
 	}
 
 	@Configuration

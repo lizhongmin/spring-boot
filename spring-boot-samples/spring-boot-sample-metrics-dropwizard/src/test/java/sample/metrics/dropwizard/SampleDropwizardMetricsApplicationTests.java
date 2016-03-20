@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Basic integration tests for {@link SampleDropwizardMetricsApplication}.
@@ -49,7 +49,7 @@ public class SampleDropwizardMetricsApplicationTests {
 	@Test
 	public void timerCreated() {
 		this.gauges.submit("timer.test", 1234);
-		assertEquals(1, this.registry.getTimers().get("timer.test").getCount());
+		assertThat(this.registry.getTimers().get("timer.test").getCount()).isEqualTo(1);
 	}
 
 }

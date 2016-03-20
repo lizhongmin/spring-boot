@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.context.web.LocalServerPort;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -42,9 +43,7 @@ import org.springframework.web.socket.client.WebSocketConnectionManager;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(SampleAtmosphereApplication.class)
@@ -54,7 +53,7 @@ public class SampleAtmosphereApplicationTests {
 
 	private static Log logger = LogFactory.getLog(SampleAtmosphereApplicationTests.class);
 
-	@Value("${local.server.port}")
+	@LocalServerPort
 	private int port = 1234;
 
 	@Test
@@ -68,9 +67,9 @@ public class SampleAtmosphereApplicationTests {
 		AtomicReference<String> messagePayloadReference = context
 				.getBean(ClientConfiguration.class).messagePayload;
 		context.close();
-		assertThat(count, equalTo(0L));
-		assertThat(messagePayloadReference.get(),
-				containsString("{\"message\":\"test\",\"author\":\"test\",\"time\":"));
+		assertThat(count).isEqualTo(0L);
+		assertThat(messagePayloadReference.get())
+				.contains("{\"message\":\"test\",\"author\":\"test\",\"time\":");
 	}
 
 	@Configuration

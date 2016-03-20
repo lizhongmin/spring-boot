@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,15 +24,13 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -121,7 +119,7 @@ public class EntityScanTests {
 		String[] actual = this.context
 				.getBean(TestLocalContainerEntityManagerFactoryBean.class)
 				.getPackagesToScan();
-		assertThat(actual, equalTo(expected));
+		assertThat(actual).isEqualTo(expected);
 	}
 
 	@Configuration
@@ -171,8 +169,11 @@ public class EntityScanTests {
 	@EntityScan("com.mycorp.entity")
 	static class BeanPostProcessorConfiguration {
 
-		@Autowired
-		protected EntityManagerFactory entityManagerFactory;
+		protected final EntityManagerFactory entityManagerFactory;
+
+		BeanPostProcessorConfiguration(EntityManagerFactory entityManagerFactory) {
+			this.entityManagerFactory = entityManagerFactory;
+		}
 
 		@Bean
 		public BeanPostProcessor beanPostProcessor() {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -139,15 +139,18 @@ public class OAuth2AuthorizationServerConfiguration
 	@Configuration
 	protected static class ClientDetailsLogger {
 
-		@Autowired
-		private OAuth2ClientProperties credentials;
+		private final OAuth2ClientProperties credentials;
+
+		protected ClientDetailsLogger(OAuth2ClientProperties credentials) {
+			this.credentials = credentials;
+		}
 
 		@PostConstruct
 		public void init() {
 			String prefix = "security.oauth2.client";
 			boolean defaultSecret = this.credentials.isDefaultSecret();
 			logger.info(String.format(
-					"Initialized OAuth2 Client\n\n%s.clientId = %s\n%s.secret = %s\n\n",
+					"Initialized OAuth2 Client%n%n%s.clientId = %s%n%s.secret = %s%n%n",
 					prefix, this.credentials.getClientId(), prefix,
 					defaultSecret ? this.credentials.getClientSecret() : "****"));
 		}
@@ -158,8 +161,11 @@ public class OAuth2AuthorizationServerConfiguration
 	@ConditionalOnMissingBean(BaseClientDetails.class)
 	protected static class BaseClientDetailsConfiguration {
 
-		@Autowired
-		private OAuth2ClientProperties client;
+		private final OAuth2ClientProperties client;
+
+		protected BaseClientDetailsConfiguration(OAuth2ClientProperties client) {
+			this.client = client;
+		}
 
 		@Bean
 		@ConfigurationProperties("security.oauth2.client")

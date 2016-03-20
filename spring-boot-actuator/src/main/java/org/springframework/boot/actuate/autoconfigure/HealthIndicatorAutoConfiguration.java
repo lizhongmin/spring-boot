@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,9 @@ import java.util.Map;
 import javax.jms.ConnectionFactory;
 import javax.sql.DataSource;
 
+import com.couchbase.client.java.Bucket;
 import com.datastax.driver.core.Cluster;
-import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrClient;
 import org.elasticsearch.client.Client;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -32,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.ApplicationHealthIndicator;
 import org.springframework.boot.actuate.health.CassandraHealthIndicator;
 import org.springframework.boot.actuate.health.CompositeHealthIndicator;
+import org.springframework.boot.actuate.health.CouchbaseHealthIndicator;
 import org.springframework.boot.actuate.health.DataSourceHealthIndicator;
 import org.springframework.boot.actuate.health.DiskSpaceHealthIndicator;
 import org.springframework.boot.actuate.health.DiskSpaceHealthIndicatorProperties;
@@ -54,6 +56,7 @@ import org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfigurati
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.couchbase.CouchbaseAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.cassandra.CassandraDataAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
@@ -71,6 +74,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.ResolvableType;
 import org.springframework.data.cassandra.core.CassandraOperations;
+import org.springframework.data.couchbase.core.CouchbaseOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -84,28 +88,33 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
  * @author Stephane Nicoll
  * @author Phillip Webb
  * @author Tommy Ludwig
+ * @author Eddú Meléndez
  * @since 1.1.0
  */
 @Configuration
 @AutoConfigureBefore({ EndpointAutoConfiguration.class })
 @AutoConfigureAfter({ CassandraAutoConfiguration.class,
-		CassandraDataAutoConfiguration.class, DataSourceAutoConfiguration.class,
-		MongoAutoConfiguration.class, MongoDataAutoConfiguration.class,
-		RedisAutoConfiguration.class, RabbitAutoConfiguration.class,
-		SolrAutoConfiguration.class, MailSenderAutoConfiguration.class,
-		JmsAutoConfiguration.class, ElasticsearchAutoConfiguration.class })
-@EnableConfigurationProperties({ HealthIndicatorAutoConfigurationProperties.class })
+		CassandraDataAutoConfiguration.class, CouchbaseAutoConfiguration.class,
+		DataSourceAutoConfiguration.class, MongoAutoConfiguration.class,
+		MongoDataAutoConfiguration.class, RedisAutoConfiguration.class,
+		RabbitAutoConfiguration.class, SolrAutoConfiguration.class,
+		MailSenderAutoConfiguration.class, JmsAutoConfiguration.class,
+		ElasticsearchAutoConfiguration.class })
+@EnableConfigurationProperties({ HealthIndicatorProperties.class })
 public class HealthIndicatorAutoConfiguration {
 
-	@Autowired
-	private HealthIndicatorAutoConfigurationProperties configurationProperties = new HealthIndicatorAutoConfigurationProperties();
+	private final HealthIndicatorProperties properties;
+
+	public HealthIndicatorAutoConfiguration(HealthIndicatorProperties properties) {
+		this.properties = properties;
+	}
 
 	@Bean
 	@ConditionalOnMissingBean(HealthAggregator.class)
 	public OrderedHealthAggregator healthAggregator() {
 		OrderedHealthAggregator healthAggregator = new OrderedHealthAggregator();
-		if (this.configurationProperties.getOrder() != null) {
-			healthAggregator.setStatusOrder(this.configurationProperties.getOrder());
+		if (this.properties.getOrder() != null) {
+			healthAggregator.setStatusOrder(this.properties.getOrder());
 		}
 		return healthAggregator;
 	}
@@ -172,6 +181,24 @@ public class HealthIndicatorAutoConfiguration {
 		@ConditionalOnMissingBean(name = "cassandraHealthIndicator")
 		public HealthIndicator cassandraHealthIndicator() {
 			return createHealthIndicator(this.cassandraOperations);
+		}
+
+	}
+
+	@Configuration
+	@ConditionalOnClass({ CouchbaseOperations.class, Bucket.class })
+	@ConditionalOnBean(CouchbaseOperations.class)
+	@ConditionalOnEnabledHealthIndicator("couchbase")
+	public static class CouchbaseHealthIndicatorConfiguration extends
+			CompositeHealthIndicatorConfiguration<CouchbaseHealthIndicator, CouchbaseOperations> {
+
+		@Autowired
+		private Map<String, CouchbaseOperations> couchbaseOperations;
+
+		@Bean
+		@ConditionalOnMissingBean(name = "couchbaseHealthIndicator")
+		public HealthIndicator couchbaseHealthIndicator() {
+			return createHealthIndicator(this.couchbaseOperations);
 		}
 
 	}
@@ -269,18 +296,18 @@ public class HealthIndicatorAutoConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnBean(SolrServer.class)
+	@ConditionalOnBean(SolrClient.class)
 	@ConditionalOnEnabledHealthIndicator("solr")
 	public static class SolrHealthIndicatorConfiguration extends
-			CompositeHealthIndicatorConfiguration<SolrHealthIndicator, SolrServer> {
+			CompositeHealthIndicatorConfiguration<SolrHealthIndicator, SolrClient> {
 
 		@Autowired
-		private Map<String, SolrServer> solrServers;
+		private Map<String, SolrClient> solrClients;
 
 		@Bean
 		@ConditionalOnMissingBean(name = "solrHealthIndicator")
 		public HealthIndicator solrHealthIndicator() {
-			return createHealthIndicator(this.solrServers);
+			return createHealthIndicator(this.solrClients);
 		}
 
 	}

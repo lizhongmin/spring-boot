@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.web.LocalServerPort;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.TestRestTemplate;
 import org.springframework.boot.test.WebIntegrationTest;
@@ -30,8 +31,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Integration tests for separate management and main service ports.
@@ -45,7 +45,7 @@ import static org.junit.Assert.assertTrue;
 @DirtiesContext
 public class ManagementAddressActuatorApplicationTests {
 
-	@Value("${local.server.port}")
+	@LocalServerPort
 	private int port = 9010;
 
 	@Value("${local.management.port}")
@@ -56,7 +56,7 @@ public class ManagementAddressActuatorApplicationTests {
 		@SuppressWarnings("rawtypes")
 		ResponseEntity<Map> entity = new TestRestTemplate()
 				.getForEntity("http://localhost:" + this.port, Map.class);
-		assertEquals(HttpStatus.UNAUTHORIZED, entity.getStatusCode());
+		assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
 	}
 
 	@Test
@@ -64,9 +64,8 @@ public class ManagementAddressActuatorApplicationTests {
 		ResponseEntity<String> entity = new TestRestTemplate().getForEntity(
 				"http://localhost:" + this.managementPort + "/admin/health",
 				String.class);
-		assertEquals(HttpStatus.OK, entity.getStatusCode());
-		assertTrue("Wrong body: " + entity.getBody(),
-				entity.getBody().contains("\"status\":\"UP\""));
+		assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(entity.getBody()).contains("\"status\":\"UP\"");
 	}
 
 }

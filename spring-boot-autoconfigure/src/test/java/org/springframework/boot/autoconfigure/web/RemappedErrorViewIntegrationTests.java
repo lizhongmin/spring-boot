@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2013 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,13 @@ package org.springframework.boot.autoconfigure.web;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.RemappedErrorViewIntegrationTests.TestConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.embedded.ConfigurableEmbeddedServletContainer;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizer;
 import org.springframework.boot.context.embedded.ErrorPage;
+import org.springframework.boot.context.web.LocalServerPort;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.TestRestTemplate;
@@ -38,7 +38,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.client.RestTemplate;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
@@ -50,7 +50,7 @@ import static org.junit.Assert.assertTrue;
 @DirtiesContext
 public class RemappedErrorViewIntegrationTests {
 
-	@Value("${local.server.port}")
+	@LocalServerPort
 	private int port;
 
 	private RestTemplate template = new TestRestTemplate();
@@ -59,16 +59,16 @@ public class RemappedErrorViewIntegrationTests {
 	public void directAccessToErrorPage() throws Exception {
 		String content = this.template.getForObject(
 				"http://localhost:" + this.port + "/spring/error", String.class);
-		assertTrue("Wrong content: " + content, content.contains("error"));
-		assertTrue("Wrong content: " + content, content.contains("999"));
+		assertThat(content).contains("error");
+		assertThat(content).contains("999");
 	}
 
 	@Test
 	public void forwardToErrorPage() throws Exception {
 		String content = this.template
 				.getForObject("http://localhost:" + this.port + "/spring/", String.class);
-		assertTrue("Wrong content: " + content, content.contains("error"));
-		assertTrue("Wrong content: " + content, content.contains("500"));
+		assertThat(content).contains("error");
+		assertThat(content).contains("500");
 	}
 
 	@Configuration

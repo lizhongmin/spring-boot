@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,9 +30,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -54,7 +52,7 @@ public class TransactionAutoConfigurationTests {
 	@Test
 	public void noTransactionManager() {
 		load(EmptyConfiguration.class);
-		assertEquals(0, this.context.getBeansOfType(TransactionTemplate.class).size());
+		assertThat(this.context.getBeansOfType(TransactionTemplate.class)).isEmpty();
 	}
 
 	@Test
@@ -65,13 +63,14 @@ public class TransactionAutoConfigurationTests {
 				.getBean(PlatformTransactionManager.class);
 		TransactionTemplate transactionTemplate = this.context
 				.getBean(TransactionTemplate.class);
-		assertSame(transactionManager, transactionTemplate.getTransactionManager());
+		assertThat(transactionTemplate.getTransactionManager())
+				.isSameAs(transactionManager);
 	}
 
 	@Test
 	public void severalTransactionManagers() {
 		load(SeveralTransactionManagersConfiguration.class);
-		assertEquals(0, this.context.getBeansOfType(TransactionTemplate.class).size());
+		assertThat(this.context.getBeansOfType(TransactionTemplate.class)).isEmpty();
 	}
 
 	@Test
@@ -79,8 +78,8 @@ public class TransactionAutoConfigurationTests {
 		load(CustomTransactionManagerConfiguration.class);
 		Map<String, TransactionTemplate> beans = this.context
 				.getBeansOfType(TransactionTemplate.class);
-		assertEquals(1, beans.size());
-		assertTrue(beans.containsKey("transactionTemplateFoo"));
+		assertThat(beans).hasSize(1);
+		assertThat(beans.containsKey("transactionTemplateFoo")).isTrue();
 	}
 
 	private void load(Class<?>... configs) {

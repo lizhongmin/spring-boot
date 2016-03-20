@@ -21,9 +21,9 @@ import java.util.Arrays;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.MinimalActuatorHypermediaApplication;
 import org.springframework.boot.actuate.endpoint.mvc.HalBrowserMvcEndpointServerContextPathIntegrationTests.SpringBootHypermediaApplication;
+import org.springframework.boot.context.web.LocalServerPort;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.TestRestTemplate;
@@ -40,8 +40,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
 /**
@@ -58,7 +57,7 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 @DirtiesContext
 public class HalBrowserMvcEndpointServerContextPathIntegrationTests {
 
-	@Value("${local.server.port}")
+	@LocalServerPort
 	private int port;
 
 	@Test
@@ -68,9 +67,8 @@ public class HalBrowserMvcEndpointServerContextPathIntegrationTests {
 		ResponseEntity<String> entity = new TestRestTemplate().exchange(
 				"http://localhost:" + this.port + "/spring/", HttpMethod.GET,
 				new HttpEntity<Void>(null, headers), String.class);
-		assertEquals(HttpStatus.OK, entity.getStatusCode());
-		assertTrue("Wrong body: " + entity.getBody(),
-				entity.getBody().contains("\"_links\":"));
+		assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(entity.getBody()).contains("\"_links\":");
 	}
 
 	@Test
@@ -80,9 +78,8 @@ public class HalBrowserMvcEndpointServerContextPathIntegrationTests {
 		ResponseEntity<String> entity = new TestRestTemplate().exchange(
 				"http://localhost:" + this.port + "/spring/actuator/", HttpMethod.GET,
 				new HttpEntity<Void>(null, headers), String.class);
-		assertEquals(HttpStatus.OK, entity.getStatusCode());
-		assertTrue("Wrong body: " + entity.getBody(),
-				entity.getBody().contains("<title"));
+		assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(entity.getBody()).contains("<title");
 	}
 
 	@Test
@@ -92,9 +89,8 @@ public class HalBrowserMvcEndpointServerContextPathIntegrationTests {
 		ResponseEntity<String> entity = new TestRestTemplate().exchange(
 				"http://localhost:" + this.port + "/spring/actuator", HttpMethod.GET,
 				new HttpEntity<Void>(null, headers), String.class);
-		assertEquals(HttpStatus.OK, entity.getStatusCode());
-		assertTrue("Wrong body: " + entity.getBody(),
-				entity.getBody().contains("\"_links\":"));
+		assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(entity.getBody()).contains("\"_links\":");
 	}
 
 	@Test
@@ -104,9 +100,8 @@ public class HalBrowserMvcEndpointServerContextPathIntegrationTests {
 		ResponseEntity<String> entity = new TestRestTemplate().exchange(
 				"http://localhost:" + this.port + "/spring/actuator/", HttpMethod.GET,
 				new HttpEntity<Void>(null, headers), String.class);
-		assertEquals(HttpStatus.OK, entity.getStatusCode());
-		assertTrue("Wrong body: " + entity.getBody(),
-				entity.getBody().contains("\"_links\":"));
+		assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(entity.getBody()).contains("\"_links\":");
 	}
 
 	@MinimalActuatorHypermediaApplication

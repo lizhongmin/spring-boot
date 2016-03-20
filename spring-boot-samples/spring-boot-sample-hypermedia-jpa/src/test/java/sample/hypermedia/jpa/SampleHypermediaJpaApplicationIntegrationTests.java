@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -83,8 +83,8 @@ public class SampleHypermediaJpaApplicationIntegrationTests {
 	public void browser() throws Exception {
 		MvcResult response = this.mockMvc.perform(get("/").accept(MediaType.TEXT_HTML))
 				.andExpect(status().isFound()).andReturn();
-		assertEquals("/browser/index.html#",
-				response.getResponse().getHeaders("location").get(0));
+		assertThat(response.getResponse().getHeaders("location").get(0))
+				.isEqualTo("/browser/index.html#");
 	}
 
 }

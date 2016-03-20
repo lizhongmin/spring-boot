@@ -35,8 +35,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -113,9 +112,8 @@ public class DevToolsDataSourceAutoConfigurationTests {
 	public void configurationBacksOffWithoutDataSourceProperties() throws SQLException {
 		ConfigurableApplicationContext context = createContext("org.h2.Driver",
 				NoDataSourcePropertiesConfiguration.class);
-		assertThat(
-				context.getBeansOfType(DevToolsDataSourceAutoConfiguration.class).size(),
-				is(0));
+		assertThat(context.getBeansOfType(DevToolsDataSourceAutoConfiguration.class))
+				.isEmpty();
 	}
 
 	@Test

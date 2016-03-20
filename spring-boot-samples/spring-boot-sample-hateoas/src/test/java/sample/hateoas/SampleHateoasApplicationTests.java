@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import java.net.URI;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.web.LocalServerPort;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.TestRestTemplate;
 import org.springframework.boot.test.WebIntegrationTest;
@@ -33,27 +33,24 @@ import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(SampleHateoasApplication.class)
 @WebIntegrationTest(randomPort = true)
 public class SampleHateoasApplicationTests {
 
-	@Value("${local.server.port}")
+	@LocalServerPort
 	private int port;
 
 	@Test
 	public void hasHalLinks() throws Exception {
 		ResponseEntity<String> entity = new TestRestTemplate().getForEntity(
 				"http://localhost:" + this.port + "/customers/1", String.class);
-		assertThat(entity.getStatusCode(), equalTo(HttpStatus.OK));
-		assertThat(entity.getBody(), startsWith(
-				"{\"id\":1,\"firstName\":\"Oliver\"" + ",\"lastName\":\"Gierke\""));
-		assertThat(entity.getBody(), containsString("_links\":{\"self\":{\"href\""));
+		assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(entity.getBody()).startsWith(
+				"{\"id\":1,\"firstName\":\"Oliver\"" + ",\"lastName\":\"Gierke\"");
+		assertThat(entity.getBody()).contains("_links\":{\"self\":{\"href\"");
 	}
 
 	@Test
@@ -64,9 +61,9 @@ public class SampleHateoasApplicationTests {
 				URI.create("http://localhost:" + this.port + "/customers/1"));
 		ResponseEntity<String> response = new TestRestTemplate().exchange(request,
 				String.class);
-		assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
-		assertThat(response.getHeaders().getContentType(),
-				equalTo(MediaType.parseMediaType("application/json;charset=UTF-8")));
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(response.getHeaders().getContentType())
+				.isEqualTo(MediaType.parseMediaType("application/json;charset=UTF-8"));
 	}
 
 }

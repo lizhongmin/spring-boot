@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,15 +25,23 @@ import org.springframework.amqp.rabbit.connection.RabbitConnectionFactoryBean;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitMessagingTemplate;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.amqp.RabbitProperties.Retry;
+import org.springframework.boot.autoconfigure.amqp.RabbitProperties.Template;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.retry.backoff.ExponentialBackOffPolicy;
+import org.springframework.retry.policy.SimpleRetryPolicy;
+import org.springframework.retry.support.RetryTemplate;
 
 /**
  * {@link EnableAutoConfiguration Auto-configuration} for {@link RabbitTemplate}.
@@ -69,28 +77,13 @@ import org.springframework.context.annotation.Import;
  * @author Greg Turnquist
  * @author Josh Long
  * @author Stephane Nicoll
+ * @author Gary Russell
  */
 @Configuration
 @ConditionalOnClass({ RabbitTemplate.class, Channel.class })
 @EnableConfigurationProperties(RabbitProperties.class)
 @Import(RabbitAnnotationDrivenConfiguration.class)
 public class RabbitAutoConfiguration {
-
-	@Bean
-	@ConditionalOnProperty(prefix = "spring.rabbitmq", name = "dynamic", matchIfMissing = true)
-	@ConditionalOnMissingBean(AmqpAdmin.class)
-	public AmqpAdmin amqpAdmin(ConnectionFactory connectionFactory) {
-		return new RabbitAdmin(connectionFactory);
-	}
-
-	@Autowired
-	private ConnectionFactory connectionFactory;
-
-	@Bean
-	@ConditionalOnMissingBean(RabbitTemplate.class)
-	public RabbitTemplate rabbitTemplate() {
-		return new RabbitTemplate(this.connectionFactory);
-	}
 
 	@Configuration
 	@ConditionalOnMissingBean(ConnectionFactory.class)
@@ -128,16 +121,88 @@ public class RabbitAutoConfiguration {
 			CachingConnectionFactory connectionFactory = new CachingConnectionFactory(
 					factory.getObject());
 			connectionFactory.setAddresses(config.getAddresses());
+			if (config.getCache().getChannel().getSize() != null) {
+				connectionFactory
+						.setChannelCacheSize(config.getCache().getChannel().getSize());
+			}
+			if (config.getCache().getConnection().getMode() != null) {
+				connectionFactory
+						.setCacheMode(config.getCache().getConnection().getMode());
+			}
+			if (config.getCache().getConnection().getSize() != null) {
+				connectionFactory.setConnectionCacheSize(
+						config.getCache().getConnection().getSize());
+			}
+			if (config.getCache().getChannel().getCheckoutTimeout() != null) {
+				connectionFactory.setChannelCheckoutTimeout(
+						config.getCache().getChannel().getCheckoutTimeout());
+			}
 			return connectionFactory;
 		}
 
 	}
 
+	@Configuration
+	@Import(RabbitConnectionFactoryCreator.class)
+	protected static class RabbitTemplateConfiguration {
+
+		@Autowired
+		private ObjectProvider<MessageConverter> messageConverter;
+
+		@Autowired
+		private RabbitProperties properties;
+
+		@Bean
+		@ConditionalOnSingleCandidate(ConnectionFactory.class)
+		@ConditionalOnMissingBean(RabbitTemplate.class)
+		public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
+			RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
+			MessageConverter messageConverter = this.messageConverter.getIfUnique();
+			if (messageConverter != null) {
+				rabbitTemplate.setMessageConverter(messageConverter);
+			}
+			Template template = this.properties.getTemplate();
+			Retry retry = template.getRetry();
+			if (retry.isEnabled()) {
+				RetryTemplate retryTemplate = new RetryTemplate();
+				SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy();
+				retryPolicy.setMaxAttempts(retry.getMaxAttempts());
+				retryTemplate.setRetryPolicy(retryPolicy);
+				ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
+				backOffPolicy.setInitialInterval(retry.getInitialInterval());
+				backOffPolicy.setMultiplier(retry.getMultiplier());
+				backOffPolicy.setMaxInterval(retry.getMaxInterval());
+				retryTemplate.setBackOffPolicy(backOffPolicy);
+				rabbitTemplate.setRetryTemplate(retryTemplate);
+			}
+			if (template.getReceiveTimeout() != null) {
+				rabbitTemplate.setReceiveTimeout(template.getReceiveTimeout());
+			}
+			if (template.getReplyTimeout() != null) {
+				rabbitTemplate.setReplyTimeout(template.getReplyTimeout());
+			}
+			return rabbitTemplate;
+		}
+
+		@Bean
+		@ConditionalOnSingleCandidate(ConnectionFactory.class)
+		@ConditionalOnProperty(prefix = "spring.rabbitmq", name = "dynamic", matchIfMissing = true)
+		@ConditionalOnMissingBean(AmqpAdmin.class)
+		public AmqpAdmin amqpAdmin(ConnectionFactory connectionFactory) {
+			return new RabbitAdmin(connectionFactory);
+		}
+
+
+	}
+
+	@Configuration
 	@ConditionalOnClass(RabbitMessagingTemplate.class)
 	@ConditionalOnMissingBean(RabbitMessagingTemplate.class)
+	@Import(RabbitTemplateConfiguration.class)
 	protected static class MessagingTemplateConfiguration {
 
 		@Bean
+		@ConditionalOnSingleCandidate(RabbitTemplate.class)
 		public RabbitMessagingTemplate rabbitMessagingTemplate(
 				RabbitTemplate rabbitTemplate) {
 			return new RabbitMessagingTemplate(rabbitTemplate);
